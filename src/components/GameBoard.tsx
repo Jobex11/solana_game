@@ -161,8 +161,8 @@ function init() {
     const cameraPosX = camera.getPos().x;
 
     drawer.clearCanvas();
-    const { isNight, nightDensity } = getNightDensity(curTime, DAY_TIME_PERIOD);
-    drawer.setCanvas(isNight, nightDensity);
+    // const { isNight, nightDensity } = getNightDensity(curTime, DAY_TIME_PERIOD);
+    // drawer.setCanvas(isNight, nightDensity);
 
     if (DEBUG) {
       cactusSpawner.drawColliderBoxes(drawer, cameraPosX);
@@ -177,11 +177,11 @@ function init() {
       );
     }
 
-    if (isNight) {
-      starSpawner.drawCanvas(drawer, cameraPosX);
-      const { x, y } = moonObj.getPos();
-      drawer.drawCanvas(moonObj.getCanvasType(), { x: x - cameraPosX, y: y });
-    }
+    // if (isNight) {
+    //   starSpawner.drawCanvas(drawer, cameraPosX);
+    //   const { x, y } = moonObj.getPos();
+    //   drawer.drawCanvas(moonObj.getCanvasType(), { x: x - cameraPosX, y: y });
+    // }
 
     if (!infoHandler.checkIsState(State.NOT_START)) {
       cloudSpawner.drawCanvas(drawer, cameraPosX);
@@ -280,7 +280,7 @@ export default function GameBoard() {
   const [gameStarted, setGameStarted] = useState(false);
   const updatePeriod = 20;
   useEffect(() => {
-    draw();
+    // draw();
 
     const interval = setInterval(() => {
       if (infoHandler.checkIsState(State.PLAYING) && document.hasFocus()) {

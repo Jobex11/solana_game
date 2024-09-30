@@ -317,6 +317,8 @@ export class Drawer implements IDrawer {
     //   ctx.fillStyle = "white";
     //   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     // }
+    // ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
     ctx.scale(gameScale, gameScale);
   }
 
