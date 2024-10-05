@@ -274,9 +274,14 @@ const LandingPage: React.FC = () => {
               data-aos-anchor-placement="top-center"
             >
               <div className="flex flex-col grow pt-[65px]">
-                <p className="font-bold text-[40px] font-sans mb-[60px]  menuBtn">
-                  Connect Wallet
-                </p>
+                <button
+                  onClick={handleClick}
+                  className="font-bold text-[40px] font-sans mb-[60px]  menuBtn"
+                >
+                  {isConnected
+                    ? shortenAddress(walletAddress!)
+                    : "Connect Wallet"}
+                </button>
                 <p className="font-bold text-[40px] font-sans mb-[60px]  menuBtn">
                   <Link to="/game">Start Game</Link>
                 </p>
