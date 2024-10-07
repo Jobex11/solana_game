@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import svg from "../assets/svg";
 import Img from "../assets/pepeImages";
 import tabList from "../assets/buttonList.png";
@@ -14,6 +14,22 @@ import {
   SystemProgram,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
+import ConnectWalletButton from "../ConnectWalletButton";
+
+//context start
+import axios from "axios";
+import { WalletContext } from "../context/WalletContext";
+
+interface Scores {
+  accumulatedScore: number;
+  highestScore: number;
+}
+
+interface LeaderboardEntry {
+  walletAddress: string;
+  accumulatedScore: number;
+}
+//context end
 
 declare global {
   interface Window {
@@ -26,6 +42,52 @@ const LandingPage: React.FC = () => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   //blockchain
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
+
+  //context start
+
+  const walletContext = useContext(WalletContext);
+  const publicKey = walletContext?.publicKey;
+
+  const [scores, setScores] = useState<Scores>({
+    accumulatedScore: 0,
+    highestScore: 0,
+  });
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+
+  // Fetch user scores
+  useEffect(() => {
+    async function fetchScores() {
+      if (!publicKey) return;
+      try {
+        const response = await axios.get<Scores>(
+          `http://localhost:3001/get-score/${publicKey.toBase58()}`
+        );
+        setScores(response.data);
+      } catch (error) {
+        console.error("Error fetching scores", error);
+      }
+    }
+
+    fetchScores();
+  }, [publicKey]);
+
+  // Fetch leaderboard
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      try {
+        const response = await axios.get<LeaderboardEntry[]>(
+          "http://localhost:3001/leaderboard"
+        );
+        setLeaderboard(response.data);
+      } catch (error) {
+        console.error("Error fetching leaderboard", error);
+      }
+    }
+
+    fetchLeaderboard();
+  }, []);
+
+  //context ends
 
   // solana  start
 
@@ -141,6 +203,7 @@ const LandingPage: React.FC = () => {
               >
                 play Pepe Trump Frog Game to collect money
               </p>
+              <ConnectWalletButton />
             </div>
 
             {/* token amount */}
@@ -151,7 +214,9 @@ const LandingPage: React.FC = () => {
             >
               <div className="rounded-[30px] border-[3px] border-[#02437B] bg-[414141] bg-opacity-[25] w-full p-1">
                 <p className="font-sans text-white text-[25px] xl:text-[40px]">
-                  <span className="text-[#FFDC00]">21365</span>
+                  <span className="text-[#FFDC00]">
+                    {publicKey ? scores.accumulatedScore : 0}
+                  </span>
                 </p>
               </div>
               <div className="absolute left-[-10px] xl:left-[-20px] top-1/2 transform -translate-y-1/2 h-full flex items-center w-16 xl:w-full">
@@ -186,7 +251,11 @@ const LandingPage: React.FC = () => {
                   <div>{svg.firthMedal}</div>
                   <div className="rounded-full border-2 border-white overflow-hidden w-[40px] h-[40px] bg-[url('./assets/avatar1.jpg')] bg-cover"></div>
                   <div className="grow rounded-md border-transparent bg-[#434553] p-3 flex flex-row justify-between gap-10 font-jua text-white text-[17px] text-left">
-                    <p>Nguyen</p>
+                    <p>
+                      {leaderboard.length > 0
+                        ? leaderboard[0].walletAddress
+                        : "No entry"}
+                    </p>
                     <p className=" grow text-yellow-400 hidden xl:flex xl:flex-row xl:gap-2 xl:items-center">
                       {svg.fullStar}
                       {svg.fullStar}
@@ -194,14 +263,22 @@ const LandingPage: React.FC = () => {
                       {svg.fullStar}
                       {svg.fullStar}
                     </p>
-                    <p>488 714 827</p>
+                    <p>
+                      {leaderboard.length > 1
+                        ? leaderboard[1].accumulatedScore
+                        : 0}
+                    </p>
                   </div>
                 </div>
                 <div className="w-full flex flex-row gap-2 xl:gap-10 p-2 justify-center items-center">
                   <div>{svg.firthMedal}</div>
                   <div className="rounded-full border-2 border-white overflow-hidden w-[40px] h-[40px] bg-[url('./assets/avatar1.jpg')] bg-cover"></div>
                   <div className="grow rounded-md border-transparent bg-[#434553] p-3 flex flex-row justify-between gap-10 font-jua text-white text-[17px] text-left">
-                    <p>Nguyen</p>
+                    <p>
+                      {leaderboard.length > 1
+                        ? leaderboard[1].walletAddress
+                        : "No entry"}
+                    </p>
                     <p className=" grow text-yellow-400 hidden xl:flex xl:flex-row xl:gap-2 xl:items-center">
                       {svg.fullStar}
                       {svg.fullStar}
@@ -209,14 +286,22 @@ const LandingPage: React.FC = () => {
                       {svg.fullStar}
                       {svg.fullStar}
                     </p>
-                    <p>488 714 827</p>
+                    <p>
+                      {leaderboard.length > 1
+                        ? leaderboard[1].accumulatedScore
+                        : 0}
+                    </p>
                   </div>
                 </div>
                 <div className="w-full flex flex-row gap-2 xl:gap-10 p-2 justify-center items-center">
                   <div>{svg.firthMedal}</div>
                   <div className="rounded-full border-2 border-white overflow-hidden w-[40px] h-[40px] bg-[url('./assets/avatar1.jpg')] bg-cover"></div>
                   <div className="grow rounded-md border-transparent bg-[#434553] p-3 flex flex-row justify-between gap-10 font-jua text-white text-[17px] text-left">
-                    <p>Nguyen</p>
+                    <p>
+                      {leaderboard.length > 2
+                        ? leaderboard[2].walletAddress
+                        : "No entry"}
+                    </p>
                     <p className=" grow text-yellow-400 hidden xl:flex xl:flex-row xl:gap-2 xl:items-center">
                       {svg.fullStar}
                       {svg.fullStar}
@@ -224,7 +309,11 @@ const LandingPage: React.FC = () => {
                       {svg.fullStar}
                       {svg.fullStar}
                     </p>
-                    <p>488 714 827</p>
+                    <p>
+                      {leaderboard.length > 2
+                        ? leaderboard[2].accumulatedScore
+                        : 0}
+                    </p>
                   </div>
                 </div>
               </div>

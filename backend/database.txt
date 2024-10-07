@@ -1,0 +1,471 @@
+========
+1.
+========
+
+
+Here's a complete guide to create an Express Node backend with MongoDB to store scores based on a user's Phantom wallet address, accumulate scores, store the highest score from a single game, and expose this data to the front-end.
+
+### 1. Set Up the Project
+
+1. **Initialize a Node.js project**:
+   ```bash
+   mkdir game-scores-phantom
+   cd game-scores-phantom
+   npm init -y
+   ```
+
+2. **Install necessary dependencies**:
+   ```bash
+   npm install express mongoose dotenv cors
+   ```
+
+   - `express`: Backend framework for building APIs
+   - `mongoose`: ODM for MongoDB
+   - `dotenv`: For environment variables
+   - `cors`: To handle cross-origin requests
+
+### 2. Set Up MongoDB Connection
+
+You need to set up a connection to MongoDB, either locally or with MongoDB Atlas.
+
+3. **Create a `.env` file** to store environment variables:
+   ```
+   MONGO_URI=mongodb://localhost:27017/gameScoresDB
+   ```
+
+4. **Create the connection logic** in `server.js`:
+   ```javascript
+   const express = require('express');
+   const mongoose = require('mongoose');
+   const cors = require('cors');
+   require('dotenv').config();
+
+   const app = express();
+   app.use(express.json());
+   app.use(cors());  // To allow cross-origin requests
+
+   // MongoDB connection
+   mongoose.connect(process.env.MONGO_URI, {
+     useNewUrlParser: true,
+     useUnifiedTopology: true,
+   })
+   .then(() => console.log('MongoDB connected...'))
+   .catch(err => console.log(err));
+
+   app.listen(3000, () => {
+     console.log('Server is running on port 3000');
+   });
+   ```
+
+### 3. Define a Mongoose Schema and Model
+
+5. **Create a model** to store the user's scores:
+   - Create a folder `models` and inside it, create a file `Score.js`:
+   ```javascript
+   const mongoose = require('mongoose');
+
+   const ScoreSchema = new mongoose.Schema({
+     walletAddress: {
+       type: String,
+       required: true,
+       unique: true,  // Unique wallet address for each user
+     },
+     accumulatedScore: {
+       type: Number,
+       default: 0,
+     },
+     highestScore: {
+       type: Number,
+       default: 0,
+     },
+   });
+
+   module.exports = mongoose.model('Score', ScoreSchema);
+   ```
+
+### 4. Create Routes to Handle Scores
+
+6. **Add routes** to handle saving and retrieving game scores in `server.js`:
+   - Update `server.js` with these routes:
+
+   ```javascript
+   const Score = require('./models/Score');
+
+   // Update score after a game
+   app.post('/update-score', async (req, res) => {
+     const { walletAddress, score } = req.body;
+     try {
+       // Find user by wallet address
+       let userScore = await Score.findOne({ walletAddress });
+
+       if (!userScore) {
+         // If user does not exist, create a new entry
+         userScore = new Score({
+           walletAddress,
+           accumulatedScore: score,
+           highestScore: score
+         });
+       } else {
+         // If user exists, update accumulated score and highest score
+         userScore.accumulatedScore += score;
+         if (score > userScore.highestScore) {
+           userScore.highestScore = score;
+         }
+       }
+
+       const savedScore = await userScore.save();
+       res.json(savedScore);
+     } catch (err) {
+       res.status(500).json({ message: err.message });
+     }
+   });
+
+   // Get user's accumulated and highest score
+   app.get('/get-score/:walletAddress', async (req, res) => {
+     const { walletAddress } = req.params;
+     try {
+       const userScore = await Score.findOne({ walletAddress });
+       if (!userScore) {
+         return res.status(404).json({ message: 'User not found' });
+       }
+       res.json(userScore);
+     } catch (err) {
+       res.status(500).json({ message: err.message });
+     }
+   });
+   ```
+
+### 5. Run the Server
+
+7. **Start the Express server**:
+   ```bash
+   node server.js
+   ```
+
+Now your backend is ready to handle score updates and retrieval.
+
+### 6. Frontend Integration
+
+In the front-end, you can use `fetch` or `axios` to interact with the backend API and display the scores.
+
+#### Example Frontend Code
+
+1. **Display scores in React**:
+   ```javascript
+   import React, { useState, useEffect } from 'react';
+   import axios from 'axios';
+
+   function UserScores({ walletAddress }) {
+     const [scores, setScores] = useState({ accumulatedScore: 0, highestScore: 0 });
+     const [currentGameScore, setCurrentGameScore] = useState(0);
+
+     useEffect(() => {
+       async function fetchScores() {
+         try {
+           const response = await axios.get(`http://localhost:3000/get-score/${walletAddress}`);
+           setScores(response.data);
+         } catch (error) {
+           console.error("Error fetching scores", error);
+         }
+       }
+
+       fetchScores();
+     }, [walletAddress]);
+
+     const submitScore = async () => {
+       try {
+         const response = await axios.post('http://localhost:3000/update-score', {
+           walletAddress,
+           score: currentGameScore,
+         });
+         setScores(response.data);
+         setCurrentGameScore(0); // reset game score after submission
+       } catch (error) {
+         console.error("Error updating score", error);
+       }
+     };
+
+     return (
+       <div>
+         <h2>User Scores</h2>
+         <p>Accumulated Score: {scores.accumulatedScore}</p>
+         <p>Highest Score: {scores.highestScore}</p>
+
+         <input
+           type="number"
+           value={currentGameScore}
+           onChange={(e) => setCurrentGameScore(Number(e.target.value))}
+           placeholder="Enter game score"
+         />
+         <button onClick={submitScore}>Submit Game Score</button>
+       </div>
+     );
+   }
+
+   export default UserScores;
+   ```
+
+### How It Works:
+- **Backend**:
+  - When a user plays a game, their score is sent to the `/update-score` endpoint.
+  - The backend checks if the user already exists (based on their Phantom wallet address).
+    - If they exist, it updates the accumulated score and highest score if the current score is higher.
+    - If they don’t exist, a new user record is created.
+  - The user's accumulated score and highest score are stored in the MongoDB database.
+
+- **Frontend**:
+  - Users can see their accumulated score and highest score, and submit new scores.
+  
+You now have a full-stack setup where the user's Phantom wallet address is used as the ID, and scores are managed and displayed efficiently.
+
+
+
+
+
+========
+2.
+========
+
+
+
+Sure! To add a **leaderboard** that displays the top 3 highest scorers based on the **accumulated score**, we will:
+
+1. Modify the backend to provide an API route that retrieves the top 3 users based on their accumulated scores.
+2. Update the front-end to display the leaderboard with the top 3 highest scorers.
+
+### 1. Update Backend: Add Leaderboard Route
+
+In your `server.js`, add a new route to fetch the top 3 highest scorers:
+
+```javascript
+// Get the top 3 highest accumulated scores for the leaderboard
+app.get('/leaderboard', async (req, res) => {
+  try {
+    // Find the top 3 users with the highest accumulated score
+    const topScorers = await Score.find().sort({ accumulatedScore: -1 }).limit(3);
+    res.json(topScorers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+```
+
+This route will query the database, sort users by their `accumulatedScore` in descending order, and return the top 3 users.
+
+### 2. Frontend Integration: Display the Leaderboard
+
+We can update the front-end to fetch and display the top 3 users in a leaderboard format.
+
+1. **Modify your React component** to include the leaderboard:
+
+   ```javascript
+   import React, { useState, useEffect } from 'react';
+   import axios from 'axios';
+
+   function UserScores({ walletAddress }) {
+     const [scores, setScores] = useState({ accumulatedScore: 0, highestScore: 0 });
+     const [currentGameScore, setCurrentGameScore] = useState(0);
+     const [leaderboard, setLeaderboard] = useState([]);
+
+     // Fetch user scores
+     useEffect(() => {
+       async function fetchScores() {
+         try {
+           const response = await axios.get(`http://localhost:3000/get-score/${walletAddress}`);
+           setScores(response.data);
+         } catch (error) {
+           console.error("Error fetching scores", error);
+         }
+       }
+
+       fetchScores();
+     }, [walletAddress]);
+
+     // Fetch leaderboard scores
+     useEffect(() => {
+       async function fetchLeaderboard() {
+         try {
+           const response = await axios.get('http://localhost:3000/leaderboard');
+           setLeaderboard(response.data);
+         } catch (error) {
+           console.error("Error fetching leaderboard", error);
+         }
+       }
+
+       fetchLeaderboard();
+     }, []);
+
+     // Submit new game score
+     const submitScore = async () => {
+       try {
+         const response = await axios.post('http://localhost:3000/update-score', {
+           walletAddress,
+           score: currentGameScore,
+         });
+         setScores(response.data);
+         setCurrentGameScore(0); // reset game score after submission
+       } catch (error) {
+         console.error("Error updating score", error);
+       }
+     };
+
+     return (
+       <div>
+         <h2>User Scores</h2>
+         <p>Accumulated Score: {scores.accumulatedScore}</p>
+         <p>Highest Score: {scores.highestScore}</p>
+
+         <input
+           type="number"
+           value={currentGameScore}
+           onChange={(e) => setCurrentGameScore(Number(e.target.value))}
+           placeholder="Enter game score"
+         />
+         <button onClick={submitScore}>Submit Game Score</button>
+
+         <h2>Leaderboard</h2>
+         <ul>
+           {leaderboard.map((user, index) => (
+             <li key={user.walletAddress}>
+               #{index + 1} {user.walletAddress} - {user.accumulatedScore} points
+             </li>
+           ))}
+         </ul>
+       </div>
+     );
+   }
+
+   export default UserScores;
+   ```
+
+2. **Explanation**:
+   - We have added an additional `useEffect` hook to fetch the leaderboard from the `/leaderboard` endpoint.
+   - The leaderboard displays the **top 3 users** in descending order based on their `accumulatedScore`.
+   - We display the leaderboard in an unordered list (`<ul>`) where each entry shows the user's **wallet address** and their **accumulated score**.
+
+### 3. Final Structure
+
+The leaderboard is now available to all users and will be updated dynamically as users play games and accumulate more points.
+
+### How It Works:
+
+1. **Backend**:
+   - The `/leaderboard` route returns the top 3 users with the highest accumulated scores from the database.
+   
+2. **Frontend**:
+   - The front-end fetches the leaderboard data and displays the top 3 highest-scoring users, along with their scores, in real time.
+
+### API Endpoints Summary:
+
+- `POST /update-score`:
+   - Request Body: `{ "walletAddress": "user's Phantom wallet address", "score": number }`
+   - Updates the user's accumulated score and highest score if the current game's score is higher than the previous.
+
+- `GET /get-score/:walletAddress`:
+   - Retrieves the user's `accumulatedScore` and `highestScore`.
+
+- `GET /leaderboard`:
+   - Retrieves the top 3 users based on their `accumulatedScore`.
+
+Now, you have a complete system with score tracking, a personal score view, and a public leaderboard!  
+
+
+
+
+=======
+TYPESCRIPT VERSION OF THE UI
+=======
+
+
+
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+interface Scores {
+  accumulatedScore: number;
+  highestScore: number;
+}
+
+interface LeaderboardEntry {
+  walletAddress: string;
+  accumulatedScore: number;
+}
+
+interface UserScoresProps {
+  walletAddress: string;
+}
+
+const UserScores: React.FC<UserScoresProps> = ({ walletAddress }) => {
+  const [scores, setScores] = useState<Scores>({ accumulatedScore: 0, highestScore: 0 });
+  const [currentGameScore, setCurrentGameScore] = useState<number>(0);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+
+  // Fetch user scores
+  useEffect(() => {
+    async function fetchScores() {
+      try {
+        const response = await axios.get<Scores>(`http://localhost:3000/get-score/${walletAddress}`);
+        setScores(response.data);
+      } catch (error) {
+        console.error('Error fetching scores', error);
+      }
+    }
+
+    fetchScores();
+  }, [walletAddress]);
+
+  // Fetch leaderboard scores
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      try {
+        const response = await axios.get<LeaderboardEntry[]>('http://localhost:3000/leaderboard');
+        setLeaderboard(response.data);
+      } catch (error) {
+        console.error('Error fetching leaderboard', error);
+      }
+    }
+
+    fetchLeaderboard();
+  }, []);
+
+  // Submit new game score
+  const submitScore = async () => {
+    try {
+      const response = await axios.post<Scores>('http://localhost:3000/update-score', {
+        walletAddress,
+        score: currentGameScore,
+      });
+      setScores(response.data);
+      setCurrentGameScore(0); // reset game score after submission
+    } catch (error) {
+      console.error('Error updating score', error);
+    }
+  };
+
+  return (
+    <div>
+      <h2>User Scores</h2>
+      <p>Accumulated Score: {scores.accumulatedScore}</p>
+      <p>Highest Score: {scores.highestScore}</p>
+
+      <input
+        type="number"
+        value={currentGameScore}
+        onChange={(e) => setCurrentGameScore(Number(e.target.value))}
+        placeholder="Enter game score"
+      />
+      <button onClick={submitScore}>Submit Game Score</button>
+
+      <h2>Leaderboard</h2>
+      <ul>
+        {leaderboard.map((user, index) => (
+          <li key={user.walletAddress}>
+            #{index + 1} {user.walletAddress} - {user.accumulatedScore} points
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default UserScores;
