@@ -203,7 +203,6 @@ const LandingPage: React.FC = () => {
               >
                 play Pepe Trump Frog Game to collect money
               </p>
-              <ConnectWalletButton />
             </div>
 
             {/* token amount */}
@@ -330,6 +329,10 @@ const LandingPage: React.FC = () => {
                 <img src={tabList} className="w-full" />
               </div>
               <div className="absolute top-0 left-0 w-full flex flex-col grow pt-[10vw]">
+                <div className="font-bold text-[30px] font-sans mb-[10vw] menuBtn">
+                  <ConnectWalletButton />
+                </div>
+                {/* 
                 <button
                   onClick={handleClick}
                   className="font-bold text-[30px] font-sans mb-[10vw] menuBtn"
@@ -338,6 +341,8 @@ const LandingPage: React.FC = () => {
                     ? shortenAddress(walletAddress!)
                     : "Connect Wallet"}
                 </button>
+                */}
+
                 <p className="font-bold text-[30px] font-sans mb-[10vw] menuBtn ">
                   <Link to="/game">Start Game</Link>
                 </p>
@@ -363,6 +368,10 @@ const LandingPage: React.FC = () => {
               data-aos-anchor-placement="top-center"
             >
               <div className="flex flex-col grow pt-[65px]">
+                <div className="font-bold text-[40px] font-sans mb-[60px]  menuBtn">
+                  <ConnectWalletButton />
+                </div>
+                {/*
                 <button
                   onClick={handleClick}
                   className="font-bold text-[40px] font-sans mb-[60px]  menuBtn"
@@ -371,6 +380,8 @@ const LandingPage: React.FC = () => {
                     ? shortenAddress(walletAddress!)
                     : "Connect Wallet"}
                 </button>
+                */}
+
                 <p className="font-bold text-[40px] font-sans mb-[60px]  menuBtn">
                   <Link to="/game">Start Game</Link>
                 </p>

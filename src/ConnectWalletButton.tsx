@@ -11,6 +11,40 @@ const ConnectWalletButton: React.FC = () => {
 
   const { publicKey, connectWallet, disconnectWallet } = walletContext;
 
+  const toggleWallet = () => {
+    if (publicKey) {
+      disconnectWallet();
+    } else {
+      connectWallet();
+    }
+  };
+
+  return (
+    <button onClick={toggleWallet}>
+      {publicKey
+        ? ` ${publicKey.toBase58().slice(0, 4)}...${publicKey
+            .toBase58()
+            .slice(-4)}`
+        : "Connect Phantom Wallet"}
+    </button>
+  );
+};
+
+export default ConnectWalletButton;
+
+/*
+import React, { useContext } from "react";
+import { WalletContext } from "./context/WalletContext";
+
+const ConnectWalletButton: React.FC = () => {
+  const walletContext = useContext(WalletContext);
+
+  if (!walletContext) {
+    return null;
+  }
+
+  const { publicKey, connectWallet, disconnectWallet } = walletContext;
+
   return (
     <div>
       {publicKey ? (
@@ -26,3 +60,5 @@ const ConnectWalletButton: React.FC = () => {
 };
 
 export default ConnectWalletButton;
+
+*/
