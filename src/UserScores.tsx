@@ -28,7 +28,7 @@ const UserScores: React.FC = () => {
       if (!publicKey) return;
       try {
         const response = await axios.get<Scores>(
-          `http://localhost:3001/get-score/${publicKey.toBase58()}`
+          `https://trump-game.onrender.com/get-score/${publicKey.toBase58()}`
         );
         setScores(response.data);
       } catch (error) {
@@ -43,7 +43,7 @@ const UserScores: React.FC = () => {
     async function fetchLeaderboard() {
       try {
         const response = await axios.get<LeaderboardEntry[]>(
-          "http://localhost:3001/leaderboard"
+          "https://trump-game.onrender.com/leaderboard"
         );
         setLeaderboard(response.data);
       } catch (error) {
@@ -58,7 +58,7 @@ const UserScores: React.FC = () => {
     if (!publicKey) return;
     try {
       const response = await axios.post<Scores>(
-        "http://localhost:3001/update-score",
+        "https://trump-game.onrender.com/update-score",
         {
           walletAddress: publicKey.toBase58(),
           score: currentGameScore,
