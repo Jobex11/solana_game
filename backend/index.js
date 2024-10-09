@@ -19,7 +19,7 @@ mongoose
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
-  console.log("Server is running on port 3000");
+  console.log(`Server is running on port ${PORT}`);
 });
 
 const Score = require("./models/Score");
@@ -53,7 +53,7 @@ app.post("/update-score", async (req, res) => {
   }
 });
 
-// Get user's accumulated and highest score
+// Get user's accumulated and highest scoreadd
 app.get("/get-score/:walletAddress", async (req, res) => {
   const { walletAddress } = req.params;
   try {
