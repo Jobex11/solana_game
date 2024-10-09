@@ -55,6 +55,7 @@ const LandingPage: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
   // Fetch user scores
+
   useEffect(() => {
     async function fetchScores() {
       if (!publicKey) return;
@@ -71,8 +72,11 @@ const LandingPage: React.FC = () => {
     fetchScores();
   }, [publicKey]);
 
-  // Fetch leaderboard
-  useEffect(() => {
+  /*
+  Fetch leaderboard
+  
+
+useEffect(() => {
     async function fetchLeaderboard() {
       try {
         const response = await axios.get<LeaderboardEntry[]>(
@@ -87,100 +91,29 @@ const LandingPage: React.FC = () => {
     fetchLeaderboard();
   }, []);
 
-  //context ends
+  */
 
-  // solana  start
-
-  // Helper function to shorten the address
-  const shortenAddress = (address: string): string => {
-    return `${address.slice(0, 4)}...${address.slice(-4)}`;
-  };
-
-  // Check if Phantom is installed
-  const isPhantomInstalled = (): boolean => {
-    return window?.solana?.isPhantom || false;
-  };
-
-  // Function to connect the Phantom wallet
-  const connectWallet = async (): Promise<void> => {
-    try {
-      const { solana } = window;
-      if (solana && solana.isPhantom) {
-        const response = await solana.connect();
-        setWalletAddress(response.publicKey.toString());
-        setIsConnected(true);
-      } else {
-        // If Phantom is not installed, prompt the user to download it
-        alert(
-          "Phantom Wallet is not installed. Redirecting you to download Phantom Wallet."
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      try {
+        const response = await axios.get<LeaderboardEntry[]>(
+          `https://trump-game.onrender.com/leaderboard?t=${Date.now()}`
         );
-        window.open("https://phantom.app/", "_blank");
+        console.log("Fetched leaderboard data:", response.data);
+        setLeaderboard(response.data);
+      } catch (error) {
+        console.error("Error fetching leaderboard", error);
       }
-    } catch (error) {
-      console.error("Error connecting to wallet:", error);
-    }
-  };
-
-  // Function to disconnect the Phantom wallet
-  const disconnectWallet = async (): Promise<void> => {
-    try {
-      const { solana } = window;
-      if (solana && solana.isPhantom) {
-        await solana.disconnect();
-        setWalletAddress(null);
-        setIsConnected(false);
-      }
-    } catch (error) {
-      console.error("Error disconnecting from wallet:", error);
-    }
-  };
-
-  // Function to send SOL tokens
-  const sendSOL = async (
-    recipientAddress: string,
-    amount: number
-  ): Promise<void> => {
-    if (!isConnected || !walletAddress) {
-      alert("Please connect your wallet first.");
-      return;
     }
 
-    try {
-      const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-      const fromPubKey = new PublicKey(walletAddress);
-      const toPubKey = new PublicKey(recipientAddress);
+    fetchLeaderboard();
 
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: fromPubKey,
-          toPubkey: toPubKey,
-          lamports: amount * LAMPORTS_PER_SOL, // Convert to lamports
-        })
-      );
+    // Optional polling to refresh leaderboard every 10 seconds
+    const intervalId = setInterval(fetchLeaderboard, 10000); // 10 seconds
+    return () => clearInterval(intervalId);
+  }, []);
 
-      // Sign and send transaction
-      const { solana } = window;
-      const { signature } = await solana.signAndSendTransaction(transaction);
-      console.log("Transaction signature:", signature);
-
-      // Confirm transaction
-      const confirmation = await connection.confirmTransaction(signature);
-      console.log("Transaction confirmed:", confirmation);
-    } catch (error) {
-      console.error("Error sending SOL:", error);
-    }
-  };
-
-  // Handle button click (connect/disconnect)
-  const handleClick = (): void => {
-    if (isConnected) {
-      disconnectWallet();
-    } else {
-      connectWallet();
-    }
-  };
-
-  // solana stop
+  //context ends
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -189,6 +122,7 @@ const LandingPage: React.FC = () => {
 
     return () => clearInterval(intervalId);
   }, []);
+
   return (
     <div className="w-full xl:min-h-screen flex flex-row justify-center bg-gradient-to-b from-[#000E1A] to-[#2D1D46]">
       {/* container */}
@@ -245,77 +179,58 @@ const LandingPage: React.FC = () => {
                   Leader-Board
                 </p>
               </div>
-              <div className="border-[3px] rounded-[30px] border-[#BED9E6] bg-transparent sm:px-[10px] py-[40px] xl:p-[40px] w-full">
-                <div className="w-full flex flex-row gap-2 xl:gap-10 p-2 justify-center items-center">
-                  <div>{svg.firthMedal}</div>
-                  <div className="rounded-full border-2 border-white overflow-hidden w-[40px] h-[40px] bg-[url('./assets/avatar1.jpg')] bg-cover"></div>
-                  <div className="grow rounded-md border-transparent bg-[#434553] p-3 flex flex-row justify-between gap-10 font-jua text-white text-[17px] text-left">
-                    <p>
-                      {leaderboard.length > 0
-                        ? leaderboard[0].walletAddress
-                        : "No entry"}
-                    </p>
-                    <p className=" grow text-yellow-400 hidden xl:flex xl:flex-row xl:gap-2 xl:items-center">
-                      {svg.fullStar}
-                      {svg.fullStar}
-                      {svg.fullStar}
-                      {svg.fullStar}
-                      {svg.fullStar}
-                    </p>
-                    <p>
-                      {leaderboard.length > 1
-                        ? leaderboard[1].accumulatedScore
-                        : 0}
-                    </p>
+              {leaderboard.length > 0 ? (
+                <div className="border-[3px] rounded-[30px] border-[#BED9E6] bg-transparent sm:px-[10px] py-[40px] xl:p-[40px] w-full">
+                  <div className="w-full flex flex-row gap-2 xl:gap-10 p-2 justify-center items-center">
+                    <div>{svg.firthMedal}</div>
+                    <div className="rounded-full border-2 border-white overflow-hidden w-[40px] h-[40px] bg-[url('./assets/avatar1.jpg')] bg-cover"></div>
+
+                    <div className="grow rounded-md border-transparent bg-[#434553] p-3 flex flex-row justify-between gap-10 font-jua text-white text-[17px] text-left">
+                      <p>{leaderboard[0].walletAddress}</p>
+                      <p className=" grow text-yellow-400 hidden xl:flex xl:flex-row xl:gap-2 xl:items-center">
+                        {svg.fullStar}
+                        {svg.fullStar}
+                        {svg.fullStar}
+                        {svg.fullStar}
+                        {svg.fullStar}
+                      </p>
+                      <p>{leaderboard[0].accumulatedScore}</p>
+                    </div>
+                  </div>
+                  <div className="w-full flex flex-row gap-2 xl:gap-10 p-2 justify-center items-center">
+                    <div>{svg.firthMedal}</div>
+                    <div className="rounded-full border-2 border-white overflow-hidden w-[40px] h-[40px] bg-[url('./assets/avatar1.jpg')] bg-cover"></div>
+                    <div className="grow rounded-md border-transparent bg-[#434553] p-3 flex flex-row justify-between gap-10 font-jua text-white text-[17px] text-left">
+                      <p>{leaderboard[1]?.walletAddress || "No entry"}</p>
+                      <p className=" grow text-yellow-400 hidden xl:flex xl:flex-row xl:gap-2 xl:items-center">
+                        {svg.fullStar}
+                        {svg.fullStar}
+                        {svg.fullStar}
+                        {svg.fullStar}
+                        {svg.fullStar}
+                      </p>
+                      <p>{leaderboard[1]?.accumulatedScore || 0}</p>
+                    </div>
+                  </div>
+                  <div className="w-full flex flex-row gap-2 xl:gap-10 p-2 justify-center items-center">
+                    <div>{svg.firthMedal}</div>
+                    <div className="rounded-full border-2 border-white overflow-hidden w-[40px] h-[40px] bg-[url('./assets/avatar1.jpg')] bg-cover"></div>
+                    <div className="grow rounded-md border-transparent bg-[#434553] p-3 flex flex-row justify-between gap-10 font-jua text-white text-[17px] text-left">
+                      <p>{leaderboard[2]?.walletAddress || "No entry"}</p>
+                      <p className=" grow text-yellow-400 hidden xl:flex xl:flex-row xl:gap-2 xl:items-center">
+                        {svg.fullStar}
+                        {svg.fullStar}
+                        {svg.fullStar}
+                        {svg.fullStar}
+                        {svg.fullStar}
+                      </p>
+                      <p>{leaderboard[2]?.accumulatedScore || 0}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="w-full flex flex-row gap-2 xl:gap-10 p-2 justify-center items-center">
-                  <div>{svg.firthMedal}</div>
-                  <div className="rounded-full border-2 border-white overflow-hidden w-[40px] h-[40px] bg-[url('./assets/avatar1.jpg')] bg-cover"></div>
-                  <div className="grow rounded-md border-transparent bg-[#434553] p-3 flex flex-row justify-between gap-10 font-jua text-white text-[17px] text-left">
-                    <p>
-                      {leaderboard.length > 1
-                        ? leaderboard[1].walletAddress
-                        : "No entry"}
-                    </p>
-                    <p className=" grow text-yellow-400 hidden xl:flex xl:flex-row xl:gap-2 xl:items-center">
-                      {svg.fullStar}
-                      {svg.fullStar}
-                      {svg.fullStar}
-                      {svg.fullStar}
-                      {svg.fullStar}
-                    </p>
-                    <p>
-                      {leaderboard.length > 1
-                        ? leaderboard[1].accumulatedScore
-                        : 0}
-                    </p>
-                  </div>
-                </div>
-                <div className="w-full flex flex-row gap-2 xl:gap-10 p-2 justify-center items-center">
-                  <div>{svg.firthMedal}</div>
-                  <div className="rounded-full border-2 border-white overflow-hidden w-[40px] h-[40px] bg-[url('./assets/avatar1.jpg')] bg-cover"></div>
-                  <div className="grow rounded-md border-transparent bg-[#434553] p-3 flex flex-row justify-between gap-10 font-jua text-white text-[17px] text-left">
-                    <p>
-                      {leaderboard.length > 2
-                        ? leaderboard[2].walletAddress
-                        : "No entry"}
-                    </p>
-                    <p className=" grow text-yellow-400 hidden xl:flex xl:flex-row xl:gap-2 xl:items-center">
-                      {svg.fullStar}
-                      {svg.fullStar}
-                      {svg.fullStar}
-                      {svg.fullStar}
-                      {svg.fullStar}
-                    </p>
-                    <p>
-                      {leaderboard.length > 2
-                        ? leaderboard[2].accumulatedScore
-                        : 0}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              ) : (
+                <div>data not temporarily availabe</div>
+              )}
             </div>
           </div>
 
